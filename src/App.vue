@@ -74,7 +74,7 @@
               <th>Time (s)</th>
               <th>Velocity (m/s)</th>
               <th>Position (m)</th>
-              <th>Fbuoyancy (N)</th>
+              <th>Fbuoy (N)</th>
               <th>Fdrag (N)</th>
               <th>Weight (N)</th>
             </tr>
@@ -111,11 +111,12 @@
   <div>
     This sim is based off the principles of falling objects outlined here <br>
     
-    F = mg-Fdrag-Fbuoyancy<br>
+    F = Weight-Fdrag-Fbuoyancy<br>
     Fdrag = 1/2*Cd*ρ*A*velocity²<br>
     Fbuoyancy = ρ*Volume*g<br>
-    a = F/m<br>
-    v = v0 + a(delta time)<br>
+    Weight = m*g<br>
+    acceleration = F/m<br>
+    velocity = velocity(at time 0) + (acceleration * delta_time)<br>
 
     <a href="https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/falling-object-with-air-resistance/">NASA article for reference</a><br>
 
@@ -345,8 +346,8 @@ export default {
             velocity: Math.abs(velocity.toFixed(2)),
             position: positionY.toFixed(2), // Add real-world position in meters
             Fbuoyancy: Fbuoyancy.toFixed(2), // Buoyancy force
-            Fdrag: Fdrag.toFixed(2), // Drag force
-            Weight: Weight.toFixed(2), // Weight of the item
+            Fdrag: Fdrag.toFixed(3), // Drag force
+            Weight: Weight.toFixed(3), // Weight of the item
           });
           elapsedTime = 0; // Reset elapsed time
         }
