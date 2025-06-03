@@ -1,59 +1,69 @@
 <template>
+  <h1>Gravity Simulation</h1>
   <div class="gravity-simulation">
-    <!-- Left Section: Item Selection and Table -->
-    <div class="left-panel">
-      <!-- Control Buttons -->
-      <section class="controls">
-        <button @click="startSimulation">Start Simulation</button>
-        <button @click="resetSimulation">Reset Simulation</button>
-      </section>
-      <!-- Item Selection Section -->
-      <section class="item-selection">
-        <h2>Select Item</h2>
-        <div class="item-options">
-          <label
-            v-for="item in items"
-            :key="item.id"
-            class="item-option"
-          >
-            <input
-              v-model="selectedItem"
-              type="radio"
-              :value="item.id"
-              class="hidden-radio"
-            />
-            <img
-              :src="item.image"
-              :alt="item.name"
-              :class="{ selected: selectedItem === item.id }"
-            />
-            <p>{{ item.name }}</p>
-          </label>
-        </div>
-      </section>
 
-      <!-- Environment Selection Section -->
-      <section class="environment-selection">
-        <h2>Select Environment</h2>
-        <div class="environment-options">
-          <label class="environment-option">
-            <input
-              v-model="selectedEnvironment"
-              type="radio"
-              value="air"
-            />
-            Air
-          </label>
-          <label class="environment-option">
-            <input
-              v-model="selectedEnvironment"
-              type="radio"
-              value="vacuum" 
-            />
-            Vacuum
-          </label>
+    <!-- Left Section: Item Selection and Table -->
+    
+      <div class="left-panel">
+        <div class="top-row">
+        <div  class="left-column">
+          <!-- Control Buttons -->
+          <section class="controls">
+            <button @click="startSimulation">Start Simulation</button>
+            <button @click="resetSimulation">Reset Simulation</button>
+        
+          </section>
+          <!-- Item Selection Section -->
+          <section class="item-selection">
+            <h2>Select Item</h2>
+            <div class="item-options">
+              <label
+                v-for="item in items"
+                :key="item.id"
+                class="item-option"
+              >
+                <input
+                  v-model="selectedItem"
+                  type="radio"
+                  :value="item.id"
+                  class="hidden-radio"
+                />
+                <img
+                  :src="item.image"
+                  :alt="item.name"
+                  :class="{ selected: selectedItem === item.id }"
+                />
+                <p>{{ item.name }}</p>
+              </label>
+            </div>
+          </section>
+          <!-- Environment Selection Section -->
+          <section class="environment-selection">
+            <h2>Select Environment</h2>
+            <div class="environment-options">
+              <label class="environment-option">
+                <input
+                  v-model="selectedEnvironment"
+                  type="radio"
+                  value="air"
+                />
+                Air
+              </label>
+              <label class="environment-option">
+                <input
+                  v-model="selectedEnvironment"
+                  type="radio"
+                  value="vacuum" 
+                />
+                Vacuum
+              </label>
+            </div>
+          </section>
         </div>
-      </section>
+        <div class="right-column">
+            <img class="forces-image" src="./assets/forces.png" alt="Forces acting on the object" />
+        </div>
+    </div>
 
       <!-- Table Section -->
       <section class="data-table">
@@ -64,6 +74,9 @@
               <th>Time (s)</th>
               <th>Velocity (m/s)</th>
               <th>Position (m)</th>
+              <th>Fbuoyancy (N)</th>
+              <th>Fdrag (N)</th>
+              <th>Weight (N)</th>
             </tr>
           </thead>
           <tbody>
@@ -71,6 +84,9 @@
               <td>{{ entry.time }}</td>
               <td>{{ entry.velocity }}</td>
               <td>{{ entry.position }}</td>
+              <td>{{ entry.Fbuoyancy }}</td>
+              <td>{{ entry.Fdrag }}</td>
+              <td>{{ entry.Weight }}</td>
             </tr>
           </tbody>
         </table>
@@ -92,6 +108,19 @@
       </section>
     </div>
   </div>
+  <div>
+    This sim is based off the principles of falling objects outlined here <br>
+    
+    F = mg-Fdrag-Fbuoyancy<br>
+    Fdrag = 1/2*Cd*ρ*A*velocity²<br>
+    Fbuoyancy = ρ*Volume*g<br>
+    a = F/m<br>
+    v = v0 + a(delta time)<br>
+
+    <a href="https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/falling-object-with-air-resistance/">NASA article for reference</a><br>
+
+    
+  </div>
 </template>
 
 <script>
@@ -109,10 +138,50 @@ export default {
     const cursorHeight = ref(0);
     const selectedItem = ref(1); 
     const items = ref([
-      { id: 1, name: "Ball", image: ballImage, drag: 0.2, scale: 0.02, buoyancy: 0, initialPosition: 350, mass: 1.0, bounce: 0.4 }, 
-      { id: 2, name: "Balloon", image: balloonImage, drag: 0.3, scale: 0.025, buoyancy: 15, initialPosition: 350, mass: 0.1, bounce: 0.2 }, 
-      { id: 3, name: "Feather", image: featherImage, drag: 2, scale: 0.0075, buoyancy: 0, initialPosition: 350, mass: 0.02, bounce: 0.1 }, 
+      { id: 1, 
+        name: "Ball", 
+        image: ballImage, 
+        drag: 0.24, //Cd based on Nasa soccer ball drag coefficient
+        mass: .45, // (kg) for a standard soccer ball
+        area: .037,// (m²) cross-sectional area of the soccer ball 
+        volume: 0.004, // (m³) estimated volume of the soccer ball r=.11m
+        scale: 0.02,
+        initialPosition: 350,  
+        bounce: 0.4 }, 
+      { id: 2, 
+        name: "Balloon", 
+        image: balloonImage, 
+        drag: 0.20, //Cd based on Nasa soccer ball drag coefficient assuming similar for balloon https://www.grc.nasa.gov/www/k-12/airplane/socdrag.html
+        mass: 0.0025 , // (kg) for a small balloon
+        area: .0037, // (m²) cross-sectional area of the balloon
+        volume: 0.004, // (m³) estimated volume of the balloon r=.1m
+        scale: 0.025,
+        initialPosition: 350, 
+        bounce: 0.2 }, 
+      { id: 3, 
+        name: "Feather", 
+        image: featherImage, 
+        drag: .75, //Cd estimated
+        mass: 0.005, // (kg) for a medium feather
+        area: .005, // (m²) estimated for medium 6in feather
+        volume: 0.0001, // (m³) estimated volume of the feather
+        scale: 0.0075,
+        initialPosition: 350, 
+        bounce: 0.1 }, 
     ]);
+
+    //This sim is based off the principles of falling objects outlined here in the NASA article:
+    //https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/falling-object-with-air-resistance/
+    //F = mg-Fdrag-Fbuoyancy
+    //a = F/m
+    //a = g - (Fdrag/m) + (Fbuoyancy/m)
+    //v = v0 + at
+    //split up for easier calculations in different environments with different drag and buoyancy forces
+    //v = v0 + g*t - (Fdrag/m)*t + (Fbuoyancy/m)*t
+
+    //Fdrag = 1/2*Cd*ρ*A*velocity²
+    //Fbuoyancy = ρ*Volume*g
+ 
     const selectedEnvironment = ref("air"); 
     const data = ref([]); 
     let pixiApp = null;
@@ -190,9 +259,11 @@ export default {
       // Get the drag, buoyancy, mass, and bounce properties of the selected item
       const selectedItemData = items.value.find((item) => item.id === selectedItem.value);
       const Cdrag = selectedItemData ? selectedItemData.drag : 0;
-      const buoyancy = selectedItemData ? selectedItemData.buoyancy : 0;
-      const mass = selectedItemData ? selectedItemData.mass : 1.0;
+      const area = selectedItemData ? selectedItemData.area : 0.01; // Cross-sectional area in m²
+      const mass = selectedItemData ? selectedItemData.mass : 1.0; // Mass in kg
+      const volume = selectedItemData ? selectedItemData.volume : 0.01; // Volume in m³
       const bounce = selectedItemData ? selectedItemData.bounce : 0;
+      console.log("selectedItemData:", selectedItemData)
 
       //constants for x oscillations
       let oscillationAngle = 180; // Angle for oscillation when falling
@@ -203,12 +274,17 @@ export default {
       let elapsedTime = 0; // Track elapsed time for recording velocity
       let totalTime = 0; // Track total simulation time
       let positionY = selectedItemData ? selectedItemData.initialPosition / scalingFactor : canvasHeight / 2; // Initial position in meters
-
+      let Fbuoyancy = 1.225 * volume * gravity; // Buoyancy force in air (ρ * V * g)
+      let Fdrag = 0; // Drag force
+      let Weight =  mass * gravity; // Weight of the item in Newtons
       // Record initial data for time = 0
       data.value.push({
         time: totalTime.toFixed(1), // Time = 0
         velocity: velocity.toFixed(2), // Initial velocity = 0
         position: positionY.toFixed(2), // Initial position
+        Fbuoyancy: Fbuoyancy.toFixed(2), // Initial buoyancy force
+        Fdrag: Fdrag.toFixed(2), // Initial drag force
+        Weight: Weight.toFixed(2), // Initial weight
       });
 
       // Start the simulation
@@ -224,13 +300,15 @@ export default {
 
         // Apply buoyancy (pushes upward, decreases velocity)
         if (selectedEnvironment.value === "air") {
-          velocity -= buoyancy * deltaTime; 
+          velocity -= (Fbuoyancy/mass) * deltaTime;
         }
 
-        // Apply drag (reduces velocity in the current direction and increases with velocity)
-        // we will use the generic F = -bv. "b" being a coefficient of drag acounting for the item and air properties. 
+        // Apply drag (acts opposite to velocity)
         if (selectedEnvironment.value === "air") {
-          velocity += (-velocity)* Cdrag * deltaTime; 
+          Fdrag = 0.5 * Cdrag * 1.225 * area * velocity * velocity; // Fdrag = 1/2*Cd*ρ*A*v²
+          const direction = velocity > 0 ? -1 : 1; // Determine direction of drag force
+          velocity += direction * (Fdrag/mass) * deltaTime; 
+          console.log("drag:", velocity)
         }
 
         // Update the item's real-world position (in meters)
@@ -266,6 +344,9 @@ export default {
             time: totalTime.toFixed(1),
             velocity: Math.abs(velocity.toFixed(2)),
             position: positionY.toFixed(2), // Add real-world position in meters
+            Fbuoyancy: Fbuoyancy.toFixed(2), // Buoyancy force
+            Fdrag: Fdrag.toFixed(2), // Drag force
+            Weight: Weight.toFixed(2), // Weight of the item
           });
           elapsedTime = 0; // Reset elapsed time
         }
@@ -349,6 +430,7 @@ export default {
       resetSimulation,
       cursorPosition,
       cursorHeight,
+
     };
   },
 };
@@ -370,13 +452,32 @@ export default {
   flex: 2;
 }
 
+.forces-image {
+  width: 150px; 
+  height: auto;
+  margin-bottom: 10px;
+}
 .item-selection,
 .environment-selection,
 .data-table,
 .controls {
   margin-bottom: 20px;
 }
+.top-row{
+  display: flex;
+  justify-content: space-between;
+}
+.left-column {
+  flex-grow: 2;
+}
+.right-column {
+  flex-grow: 0;
+  max-width: 120px; /* Set a maximum width for the column */
+  display: flex;
+  justify-content: center;
+  align-items: center;
 
+}
 .item-options {
   display: flex;
   flex-wrap: wrap;
