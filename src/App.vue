@@ -109,14 +109,22 @@
     </div>
   </div>
   <div>
-    This sim is based off the principles of falling objects outlined here <br>
-    
-    F = Weight-Fdrag-Fbuoyancy<br>
-    Fdrag = 1/2*Cd*ρ*A*velocity²<br>
-    Fbuoyancy = ρ*Volume*g<br>
-    Weight = m*g<br>
-    acceleration = F/m<br>
+    <h3>Governing Equations:</h3>
+    <strong>1. Net Force:</strong> The net force acting on the object is calculated as:<br>
+    F = Weight - Fdrag - Fbuoyancy<br>
+    Where:<br>
+    Weight = m * g (force due to gravity)<br>
+    Fdrag = 0.5 * Cd * ρ * A * velocity² (drag force, dependent on velocity)<br>
+    Fbuoyancy = ρ * Volume * g (buoyancy force, upward force due to displaced air)<br>
+    <br>
+    <strong>2.Acceleration:</strong> Using Newton's second law:<br>
+    acceleration = F / m<br>
+    Substituting the net force:<br>
+    acceleration = g - (Fdrag / m) + (Fbuoyancy / m)<br>
+    <br>
+    <strong>3. Velocity Update:</strong> The velocity is updated using the kinematic equation:<br>
     velocity = velocity(at time 0) + (acceleration * delta_time)<br>
+    This accounts for the cumulative effect of forces over time.<br>
 
     <a href="https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/falling-object-with-air-resistance/">NASA article for reference</a><br>
 
