@@ -28,7 +28,8 @@ The output will be in the dist directory.
 
 ## Deployment
 
-This project is configured to deploy to GitHub Pages using a GitHub Actions workflow. Push changes to the main branch to trigger the deployment.
+This project is configured to deploy to AWS amplify through the aws amplify console. Push changes to the main branch to trigger the deployment. Here is the link to the running app
+https://main.d3cxr1gia21agf.amplifyapp.com/
 
 ## Technologies Used
 
