@@ -13,28 +13,30 @@ A physics-based simulation built with Vue 3 and PIXI.js that demonstrates the ef
 ## Installation
 
     1. Clone the repository:
-    ```bash
-    git clone https://github.com/radforda/gravity-sim.git
-    cd gravity-sim
-    ```
+        git clone https://github.com/radforda/gravity-sim.git
+        cd gravity-sim
     2. Install dependencies:
         npm install
     3. Start the development server:
         npm run dev
 
 ## Build for Production
+
 To build the project for production, run:
     npm run build
 The output will be in the dist directory.
 
 ## Deployment
+
 This project is configured to deploy to GitHub Pages using a GitHub Actions workflow. Push changes to the main branch to trigger the deployment.
 
 ## Technologies Used
+
 Vue 3: Frontend framework for building the user interface.
 PIXI.js: 2D rendering engine for the simulation.
 Vite: Build tool for fast development and production builds.
 
 ## License
+
 This project is licensed under the MIT License. 
 
