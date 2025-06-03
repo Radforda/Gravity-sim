@@ -283,7 +283,7 @@ export default {
       let elapsedTime = 0; // Track elapsed time for recording velocity
       let totalTime = 0; // Track total simulation time
       let positionY = selectedItemData ? selectedItemData.initialPosition / scalingFactor : canvasHeight / 2; // Initial position in meters
-      let Fbuoyancy = selectedEnvironment == "air" ? 1.225 * volume * gravity: 0; // Buoyancy force in air (ρ * V * g)
+      let Fbuoyancy = selectedEnvironment.value === "air" ? 1.225 * volume * gravity: 0; // Buoyancy force in air (ρ * V * g)
       let Fdrag = 0; // Drag force
       let Weight =  mass * gravity; // Weight of the item in Newtons
       // Record initial data for time = 0
