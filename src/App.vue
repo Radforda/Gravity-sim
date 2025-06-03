@@ -109,7 +109,7 @@ export default {
     const cursorHeight = ref(0);
     const selectedItem = ref(1); 
     const items = ref([
-      { id: 1, name: "Ball", image: ballImage, drag: 0.5, scale: 0.02, buoyancy: 0, initialPosition: 350, mass: 1.0, bounce: 0.4 }, 
+      { id: 1, name: "Ball", image: ballImage, drag: 0.2, scale: 0.02, buoyancy: 0, initialPosition: 350, mass: 1.0, bounce: 0.4 }, 
       { id: 2, name: "Balloon", image: balloonImage, drag: 0.3, scale: 0.025, buoyancy: 15, initialPosition: 350, mass: 0.1, bounce: 0.2 }, 
       { id: 3, name: "Feather", image: featherImage, drag: 2, scale: 0.0075, buoyancy: 0, initialPosition: 350, mass: 0.02, bounce: 0.1 }, 
     ]);
