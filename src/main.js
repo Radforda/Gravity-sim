@@ -1,4 +1,4 @@
 import { createApp } from 'vue'
-import gravity from './gravity.vue'
+import app from './App.vue'
 
-createApp(gravity).mount('#app')
+createApp(app).mount('#app')
