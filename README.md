@@ -28,8 +28,8 @@ The output will be in the dist directory.
 
 ## Deployment
 
-This project is configured to deploy to AWS amplify through the aws amplify console. Push changes to the main branch to trigger the deployment. Here is the link to the running app
-https://main.d3cxr1gia21agf.amplifyapp.com/
+This project is configured to deploy to AWS amplify through the aws amplify console. Push changes to the main branch to trigger the deployment. Here is the link to the running app:
+https://main.d2j0r9hxyxtwtt.amplifyapp.com/
 
 ## Technologies Used
 
