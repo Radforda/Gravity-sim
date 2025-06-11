@@ -1,16 +1,14 @@
 <template>
   
   <div class="gravity-simulation">
-    <!-- Center Section: Simulation -->
-    <div class="center-panel">
+<!---------------------------- Simulation Panel------------------------->
+    <div class="sim-panel">
         <div class="simulation-container">
-          <!-- Height Scale -->
           <div class="height-scale">
             <div v-for="i in 10" :key="i" class="scale-mark">
               {{ (100 - i * 10) }} m
             </div>
           </div>
-          <!-- Simulation Area -->
           <div ref="simContainer" class="simulation-area">
             <!-- PIXI.js simulation will render here -->
             <div
@@ -24,37 +22,41 @@
         </div>
     </div>
 
-    <!-- Right Section: Item Details -->
-    <div class="right-panel">
+<!---------------------------- Data Panel------------------------------->
+    <div class="data-panel">
+      
+<!-------------------------- Controls Section --------------------------->
       <section class="item-details">
         <h2>Gravity Simulation</h2>
         <section class="controls">
-            <button @click="startSimulation" :disabled="disableStart">Start Simulation</button>
-            <button @click="resetSimulation">Reset Simulation</button>
-          </section>
+          <button @click="startSimulation" :disabled="disableStart">Start Simulation</button>
+          <button @click="resetSimulation">Reset Simulation</button>
+        </section>
+
+<!--------------- Item Selection ----------------------> 
         <section class="item-selection">
-            <h3>Select Item</h3>
-            <div class="item-options">
-              <label
-                v-for="item in items"
-                :key="item.id"
-                class="item-option"
-              >
-                <input
-                  v-model="selectedItem"
-                  type="radio"
-                  :value="item.id"
-                  class="hidden-radio"
-                />
-                <img
-                  :src="item.image"
-                  :alt="item.name"
-                  :class="{ selected: selectedItem === item.id }"
-                />
-                <p>{{ item.name }}</p>
-              </label>
-            </div>
-          </section>
+          <h3>Select Item</h3>
+          <div class="item-options">
+            <label
+              v-for="item in items"
+              :key="item.id"
+              class="item-option"
+            >
+              <input
+                v-model="selectedItem"
+                type="radio"
+                :value="item.id"
+                class="hidden-radio"
+              />
+              <img
+                :src="item.image"
+                :alt="item.name"
+                :class="{ selected: selectedItem === item.id }"
+              />
+              <p>{{ item.name }}</p>
+            </label>
+          </div>
+        </section>
         <div class="stats-card">
           <div class="stat-row">
             <span class="stat-label">Mass:</span>
@@ -74,29 +76,29 @@
           </div>
         </div>
        
-            <!-- Environment Selection Section -->
-            <section class="environment-selection">
-            <h3>Select Environment</h3>
-            <div class="environment-options">
-              <label class="environment-option">
-                <input
-                  v-model="selectedEnvironment"
-                  type="radio"
-                  value="air"
-                />
-                Air
-              </label>
-              <label class="environment-option">
-                <input
-                  v-model="selectedEnvironment"
-                  type="radio"
-                  value="vacuum" 
-                />
-                Vacuum
-              </label>
-            </div>
-          </section>
-          <div class="stats-card">
+<!--------------- Environment Selection ------------------>
+        <section class="environment-selection">
+          <h3>Select Environment</h3>
+          <div class="environment-options">
+            <label class="environment-option">
+              <input
+                v-model="selectedEnvironment"
+                type="radio"
+                value="air"
+              />
+              Air
+            </label>
+            <label class="environment-option">
+              <input
+                v-model="selectedEnvironment"
+                type="radio"
+                value="vacuum" 
+              />
+              Vacuum
+            </label>
+          </div>
+        </section>
+        <div class="stats-card">
           <div class="stat-row">
             <span class="stat-label">Gravity:</span>
             <span class="stat-value">9.81 m/s</span>
@@ -105,9 +107,9 @@
             <span class="stat-label">Density:</span>
             <span class="stat-value">{{selectedEnvironment == "air" ? "1.225 kg/m³": "0 kg/m³"}}</span>
           </div>
-          </div>
-          <h3> Computed Properties</h3>
-          <div class="stats-card">
+        </div>
+        <h3> Computed Properties</h3>
+        <div class="stats-card">
           <div class="stat-row">
             <span class="stat-label">Weight:</span>
             <span class="stat-value">{{(selectedItemData.mass * 9.81).toFixed(3)}} kg</span>
@@ -116,14 +118,14 @@
             <span class="stat-label">Buoyancy Force:</span>
             <span class="stat-value">{{(selectedEnvironment == "air" ? 1.225 * selectedItemData.volume * 9.81: 0).toFixed(3)}} N</span>
           </div>
-          </div>
+        </div>
       </section>
     
 
-      <!-- Velocity vs Time Graph -->
+<!-------------------------- Graphs --------------------------------------->
       <section class="graphs">
         <h3>Graphs</h3>
-        
+  
         <div class="graph-container">
           <canvas id="velocityGraph"></canvas>
         <canvas id="velocityGraph"></canvas>
@@ -138,7 +140,9 @@
         <canvas id="positionGraph"></canvas>
       </div>
       </section>
-      <!-- Table Section -->
+
+
+<!---------------------------- Table Section--------------------------------->
       <section class="data-table">
         <h3>Collected Data</h3>
         <table>
@@ -162,10 +166,11 @@
       </section>
     </div>
   </div>
-  <div>
-    
-  </div>
 </template>
+
+
+
+
 
 <script>
 import * as PIXI from "pixi.js";
@@ -182,7 +187,21 @@ export default {
     const simContainer = ref(null);
     const cursorPosition = ref({ x: 0, y: 0 }); 
     const cursorHeight = ref(0);
-    const selectedItem = ref(1); 
+    const selectedItem = ref(1);
+    let velocityChart = null;
+    let dragChart = null;
+    let positionChart = null;
+    const selectedEnvironment = ref("air"); 
+    const data = ref([]); 
+    let pixiApp = null;
+    let item = null;
+    const gravity = 9.81; //9.81 m/s²
+    const canvasWidth = 400;
+    const canvasHeight = 700; 
+    const simulationHeight = 100; // Maximum height in meters
+    const scalingFactor = canvasHeight / simulationHeight; // Pixels per meter
+ 
+
     const items = ref([
       { id: 1, 
         name: "Ball", 
@@ -219,173 +238,13 @@ export default {
     const selectedItemData = computed(() => {
       return items.value.find((item) => item.id === selectedItem.value);
     });
-
-
-    let velocityChart = null;
-    let dragChart = null;
-    let positionChart = null;
-
-const initializeGraphs = () => {
-  const ctx = document.getElementById("velocityGraph").getContext("2d");
-  velocityChart = new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: data.value.map((entry) => entry.time), // Time values
-      datasets: [
-        {
-          label: "Velocity (m/s)",
-          data: data.value.map((entry) => entry.velocity), // Velocity values
-          borderColor: "#4caf50",
-          fill: false,
-        },
-      ],
-    },
-    options: {
-        plugins: {
-          title: {
-                display: true,
-                text: 'Velocity vs Time',
-            },
-            legend: {
-                display: false, // This line removes the legend
-            }
-        },
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        x: {
-          title: {
-            display: true,
-            text: "Time (s)",
-          },
-        },
-        y: {
-          title: {
-            display: true,
-            text: "Velocity (m/s)",
-          },
-        },
-      },
-    },
-  });
-
-  const ctxDrag = document.getElementById("dragGraph").getContext("2d");
-  dragChart = new Chart(ctxDrag, {
-    type: "line",
-    data: {
-      labels: data.value.map((entry) => entry.time), // Time values
-      datasets: [
-        {
-          label: "Drag Force (N)",
-          data: data.value.map((entry) => entry.Fdrag), // Drag force values
-          borderColor: "#f44336",
-          fill: false,
-        },
-      ],
-    },
-    options: {
-      plugins: {
-          title: {
-                display: true,
-                text: 'Drag vs Time',
-            },
-            legend: {
-                display: false, // This line removes the legend
-            }
-        },
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        x: {
-          title: {
-            display: true,
-            text: "Time (s)",
-          },
-        },
-        y: {
-          title: {
-            display: true,
-            text: "Drag Force (N)",
-          },
-        },
-      },
-    },
-  });
-
-  const ctxPosition = document.getElementById("positionGraph").getContext("2d");
-  positionChart = new Chart(ctxPosition, {
-    type: "line",
-    data: {
-      labels: data.value.map((entry) => entry.time), // Time values
-      datasets: [
-        {
-          label: "Position (m)",
-          data: data.value.map((entry) => entry.position), // Position values
-          borderColor: "#2196f3",
-          backgroundColor: "rgba(33, 150, 243, 0.2)",
-          fill: false,
-        },
-      ],
-    },
-    options: {
-      plugins: {
-          title: {
-                display: true,
-                text: 'Position vs Time',
-            },
-            legend: {
-                display: false, // This line removes the legend
-            }
-        },
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        x: {
-          title: {
-            display: true,
-            text: "Time (s)",
-          },
-        },
-        y: {
-          title: {
-            display: true,
-            text: "Position (m)",
-          },
-        },
-      },
-    },
-  });
-};
-
-    //This sim is based off the principles of falling objects outlined here in the NASA article:
-    //https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/falling-object-with-air-resistance/
-    //F = mg-Fdrag-Fbuoyancy
-    //a = F/m
-    //a = g - (Fdrag/m) + (Fbuoyancy/m)
-    //v = v0 + at
-    //split up for easier calculations in different environments with different drag and buoyancy forces
-    //v = v0 + g*t - (Fdrag/m)*t + (Fbuoyancy/m)*t
-
-    //Fdrag = 1/2*Cd*ρ*A*velocity²
-    //Fbuoyancy = ρ*Volume*g
- 
-    const selectedEnvironment = ref("air"); 
-    const data = ref([]); 
-    let pixiApp = null;
-    let item = null;
-    const gravity = 9.81; //9.81 m/s²
-
-    // Canvas and simulation parameters
-    const canvasWidth = 400;
-    const canvasHeight = 700; 
-    const simulationHeight = 100; // Maximum height in meters
-    const scalingFactor = canvasHeight / simulationHeight; // Pixels per meter
-
-    // Computed property for the name of the selected item
     const selectedItemName = computed(() => {
       const selected = items.value.find((item) => item.id === selectedItem.value);
       return selected ? selected.name : "None";
     });
+
+
+    //---------------------------Initialize PIXI.js simulation-----------------------------
 
     const initializeSimulation = async (itemImage) => {
       if (!simContainer.value) return;
@@ -440,6 +299,20 @@ const initializeGraphs = () => {
       pixiApp.stage.addChild(item);
     };
 
+//---------------------------simulation run logic-----------------------------------
+
+  //This sim is based off the principles of falling objects outlined here in the NASA article:
+    //https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/falling-object-with-air-resistance/
+    //F = mg-Fdrag-Fbuoyancy
+    //a = F/m
+    //a = g - (Fdrag/m) + (Fbuoyancy/m)
+    //v = v0 + at
+    //split up for easier calculations in different environments with different drag and buoyancy forces
+    //v = v0 + g*t - (Fdrag/m)*t + (Fbuoyancy/m)*t
+
+    //Fdrag = 1/2*Cd*ρ*A*velocity²
+    //Fbuoyancy = ρ*Volume*g
+
     const startSimulation = () => {
       if(disableStart.value) return; // Prevent starting if already running
       disableStart.value = true 
@@ -447,16 +320,12 @@ const initializeGraphs = () => {
 
       // Get the drag, buoyancy, mass, and bounce properties of the selected item
       const selectedItemData = items.value.find((item) => item.id === selectedItem.value);
-      const Cdrag = selectedItemData ? selectedItemData.drag : 0;
-      const area = selectedItemData ? selectedItemData.area : 0.01; // Cross-sectional area in m²
-      const mass = selectedItemData ? selectedItemData.mass : 1.0; // Mass in kg
-      const volume = selectedItemData ? selectedItemData.volume : 0.01; // Volume in m³
-      const bounce = selectedItemData ? selectedItemData.bounce : 0;
-      console.log("selectedItemData:", selectedItemData)
+      const Cdrag = selectedItemData.drag;
+      const area = selectedItemData.area; // Cross-sectional area in m²
+      const mass = selectedItemData.mass; // Mass in kg
+      const volume = selectedItemData.volume; // Volume in m³
+      const bounce = selectedItemData.bounce;
 
-      //constants for x oscillations
-      let oscillationAngle = 180; // Angle for oscillation when falling
-      const oscillationAmplitude = .5; // amplitude for oscillation when falling
 
       // Initialize variables for simulation
       let velocity = 0;
@@ -466,6 +335,12 @@ const initializeGraphs = () => {
       let Fbuoyancy = selectedEnvironment.value === "air" ? 1.225 * volume * gravity: 0; // Buoyancy force in air (ρ * V * g)
       let Fdrag = 0; // Drag force
       let Weight =  mass * gravity; // Weight of the item in Newtons
+
+
+        //constants for x oscillations
+        let oscillationAngle = 180; // Angle for oscillation when falling
+        const oscillationAmplitude = .5; // amplitude for oscillation when falling
+
       // Record initial data for time = 0
       data.value.push({
         time: totalTime.toFixed(1), // Time = 0
@@ -479,10 +354,13 @@ const initializeGraphs = () => {
       // Start the simulation
       pixiApp.ticker.add(() => {
 
-        // Calculate the time elapsed since the last frame
+        //------------ Calculate the time elapsed since the last frame---------------------
+
         const deltaTime = pixiApp.ticker.elapsedMS / 1000; // Convert elapsed time to seconds
         elapsedTime += deltaTime;
         totalTime += deltaTime;
+
+        //-------------------Update the item's position and velocity-------------------
 
         // Apply gravity (pulls downward, increases velocity positively)
         velocity += gravity * deltaTime; // m/s
@@ -516,7 +394,9 @@ const initializeGraphs = () => {
         // Convert the real-world position to canvas position (in pixels)
         item.y = canvasHeight - positionY * scalingFactor - item.height / 2;
 
-        // Add oscillating motion in the x-direction if mass is less than 0.75 to simulate light objects uneven drag 
+
+        // ------------------Add oscillating motion in the x-direction-----------------
+
         if (mass < 0.25 && !(item.y <= item.height / 2)  && selectedEnvironment.value === "air") {
           // Increment the angle for oscillation
             oscillationAngle += 2 * deltaTime; 
@@ -526,8 +406,9 @@ const initializeGraphs = () => {
           item.rotation += Math.sin(oscillationAngle*2) * deltaTime; 
         }
 
-        // Record velocity and position every half second
+        // ---------------Record Data for Table and Charts ---------------------
         if (elapsedTime >= 0.5) {
+          // Record the data for table
           data.value.push({
             time: totalTime.toFixed(1),
             velocity: Math.abs(velocity.toFixed(2)),
@@ -538,22 +419,19 @@ const initializeGraphs = () => {
           });
           elapsedTime = 0; // Reset elapsed time
         
-
-          // Update the chart data
-          velocityChart.data.labels = data.value.map((entry) => entry.time); // Add new x-axis label
-          velocityChart.data.datasets[0].data = data.value.map((entry) => entry.velocity); // Add new y-axis value
+          // record the chart data
+          velocityChart.data.labels = data.value.map((entry) => entry.time); 
+          velocityChart.data.datasets[0].data = data.value.map((entry) => entry.velocity); 
           velocityChart.update();
-
-          // Update the drag force chart data
-          dragChart.data.labels = data.value.map((entry) => entry.time); // Add new x-axis label
-          dragChart.data.datasets[0].data = data.value.map((entry) => entry.Fdrag); // Add new y-axis value
+          dragChart.data.labels = data.value.map((entry) => entry.time); 
+          dragChart.data.datasets[0].data = data.value.map((entry) => entry.Fdrag); 
           dragChart.update();
-
-          // Update the position chart data
-          positionChart.data.labels = data.value.map((entry) => entry.time); // Add new x-axis label
-          positionChart.data.datasets[0].data = data.value.map((entry) => entry.position); // Add new y-axis value
+          positionChart.data.labels = data.value.map((entry) => entry.time); 
+          positionChart.data.datasets[0].data = data.value.map((entry) => entry.position); 
           positionChart.update();
         }
+
+        //--------------------------end the simulation-----------------------------
 
         // Stop the simulation when the item comes to rest
         if (velocity === 0 && positionY === 0) {
@@ -569,12 +447,20 @@ const initializeGraphs = () => {
     };
 
     const resetSimulation = () => {
-        destroySimulation();
-        const item = items.value.find((item) => item.id === selectedItem.value);
-        initializeSimulation(item.image);
-      // Clear the `data` array
+      destroySimulation();
+      const item = items.value.find((item) => item.id === selectedItem.value);
+      initializeSimulation(item.image);
+      velocityChart.data.labels = []; 
+      velocityChart.data.datasets[0].data = []; 
+      velocityChart.update(); 
+      dragChart.data.labels = [];
+      dragChart.data.datasets[0].data = [];
+      dragChart.update();
+      positionChart.data.labels = []; 
+      positionChart.data.datasets[0].data = []; 
+      positionChart.update();
       data.value = [];
-      disableStart.value = false; // Re-enable the start button
+      disableStart.value = false;
     };
 
     const destroySimulation = () => {
@@ -584,15 +470,20 @@ const initializeGraphs = () => {
       }
     };
 
-    // Watch for changes to the selected item and update the simulation
     watch(
       selectedItem,
       async (newItemId) => {
         const newItem = items.value.find((item) => item.id === newItemId);
         if (newItem) {
-            destroySimulation();
-            await initializeSimulation(newItem.image);
-            data.value = [];
+          resetSimulation()
+        }
+      },
+    );
+    watch(
+      selectedEnvironment,
+      async (newEnv) => {
+        if (newEnv) {
+          resetSimulation() 
         }
       },
     );
@@ -619,6 +510,139 @@ const initializeGraphs = () => {
         cursorHeight.value = null; // Reset the height value
       }
     };
+
+
+  const initializeGraphs = () => {
+    const ctx = document.getElementById("velocityGraph").getContext("2d");
+    velocityChart = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: data.value.map((entry) => entry.time), // Time values
+        datasets: [
+          {
+            label: "Velocity (m/s)",
+            data: data.value.map((entry) => entry.velocity), // Velocity values
+            borderColor: "#4caf50",
+            fill: false,
+          },
+        ],
+      },
+      options: {
+          plugins: {
+            title: {
+                  display: true,
+                  text: 'Velocity vs Time',
+              },
+              legend: {
+                  display: false, // This line removes the legend
+              }
+          },
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: "Time (s)",
+            },
+          },
+          y: {
+            title: {
+              display: true,
+              text: "Velocity (m/s)",
+            },
+          },
+        },
+      },
+    });
+
+    const ctxDrag = document.getElementById("dragGraph").getContext("2d");
+    dragChart = new Chart(ctxDrag, {
+      type: "line",
+      data: {
+        labels: data.value.map((entry) => entry.time), // Time values
+        datasets: [
+          {
+            label: "Drag Force (N)",
+            data: data.value.map((entry) => entry.Fdrag), // Drag force values
+            borderColor: "#f44336",
+            fill: false,
+          },
+        ],
+      },
+      options: {
+        plugins: {
+            title: {
+                  display: true,
+                  text: 'Drag vs Time',
+              },
+              legend: {
+                  display: false, // This line removes the legend
+              }
+          },
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: "Time (s)",
+            },
+          },
+          y: {
+            title: {
+              display: true,
+              text: "Drag Force (N)",
+            },
+          },
+        },
+      },
+    });
+
+    const ctxPosition = document.getElementById("positionGraph").getContext("2d");
+    positionChart = new Chart(ctxPosition, {
+      type: "line",
+      data: {
+        labels: data.value.map((entry) => entry.time), // Time values
+        datasets: [
+          {
+            label: "Position (m)",
+            data: data.value.map((entry) => entry.position), // Position values
+            borderColor: "#2196f3",
+            backgroundColor: "rgba(33, 150, 243, 0.2)",
+            fill: false,
+          },
+        ],
+      },
+      options: {
+        plugins: {
+            title: {
+                  display: true,
+                  text: 'Position vs Time',
+              },
+              legend: {
+                  display: false, // This line removes the legend
+              }
+          },
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: "Time (s)",
+            },
+          },
+          y: {
+            title: {
+              display: true,
+              text: "Position (m)",
+            },
+          },
+        },
+      },
+    });
+  };
 
     onMounted(() => {
       initializeGraphs();
@@ -660,16 +684,22 @@ const initializeGraphs = () => {
 };
 </script>
 
+
+
+
+
+
 <style>
 .gravity-simulation {
   display: flex;
   justify-content: space-between;
   padding: 20px;
+  flex-wrap: wrap;
 }
 
-.center-panel {
-  width: 400px; /* Match the simulation canvas width */
-  height: 700px; /* Match the simulation canvas height */
+.sim-panel {
+  width: 400px; 
+  height: 700px; 
   display: flex;
   justify-content: center;
   align-items: center;
@@ -677,13 +707,13 @@ const initializeGraphs = () => {
 
 .simulation-area {
   border: 1px solid #ccc;
-  width: 100%; /* Ensure the simulation canvas fits the center panel */
-  height: 100%; /* Ensure the simulation canvas fits the center panel */
+  width: 100%; 
+  height: 100%; 
 }
 
-.right-panel {
-  flex: 1; /* Ensure the item details section takes up equal space as the left panel */
-  margin-top: 0; /* Remove the top margin to align it properly */
+.data-panel {
+  flex: 1; 
+  margin-top: 0; 
   padding: 10px;
   border: 1px solid #ccc;
   background-color: #f9f9f9;
@@ -713,6 +743,7 @@ const initializeGraphs = () => {
 .item-options {
   display: flex;
   flex-wrap: wrap;
+  justify-content: space-evenly;
 }
 
 .item-option {
@@ -740,6 +771,7 @@ const initializeGraphs = () => {
 
 .environment-options {
   display: flex;
+  justify-content: space-evenly;
 }
 
 .environment-option {
@@ -811,7 +843,6 @@ const initializeGraphs = () => {
   text-align: right;
 }
 
-/* New styles for the stats card */
 .stats-card {
   background-color: #fff;
   padding: 15px;
@@ -837,35 +868,35 @@ const initializeGraphs = () => {
 .graph-container {
   position: relative;
   width: 300px;
-  height: 200px; /* Set a fixed height for the graph container */
+  height: 200px; 
 }
 
 .controls button {
-  background-color: darkblue; /* Blue background */
-  color: white; /* White text */
-  border: none; /* Remove border */
-  border-radius: 4px; /* Slightly rounded corners */
-  padding: 8px 16px; /* Smaller padding */
-  font-size: 14px; /* Slightly smaller font size */
-  cursor: pointer; /* Change cursor to pointer */
-  transition: background-color 0.2s; /* Smooth transition for background color */
-  margin-right: 10px; /* Add space between buttons */
+  background-color: darkblue; 
+  color: white; 
+  border: none; 
+  border-radius: 4px; 
+  padding: 8px 16px; 
+  font-size: 14px; 
+  cursor: pointer; 
+  transition: background-color 0.2s; 
+  margin-right: 10px;
 }
 
 
 .controls button:last-child {
-  margin-right: 0; /* Remove margin for the last button */
+  margin-right: 0; 
 }
 
 .controls button:not(:disabled):hover {
-  background-color: #0056b3; /* Darker blue on hover */
+  background-color: #0056b3; 
 }
 
 .controls button:not(:disabled):active {
-  background-color: #003f7f; /* Even darker blue on click */
+  background-color: #003f7f;
 }
 button:disabled {
-  background-color: #ccc; /* Gray background for disabled state */
-  cursor: not-allowed; /* Change cursor to indicate disabled state */
+  background-color: #ccc;
+  cursor: not-allowed; 
 }
 </style>
