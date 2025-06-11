@@ -245,6 +245,7 @@ export default {
 
 
     //---------------------------Initialize PIXI.js simulation-----------------------------
+   
 
     const initializeSimulation = async (itemImage) => {
       if (!simContainer.value) return;
@@ -299,7 +300,11 @@ export default {
       pixiApp.stage.addChild(item);
     };
 
-//---------------------------simulation run logic-----------------------------------
+
+
+// ---------------------------------------------------------------------------------------------------
+//-----------------------------  simulation logic  ---------------------------------------------------
+// ---------------------------------------------------------------------------------------------------
 
   //This sim is based off the principles of falling objects outlined here in the NASA article:
     //https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/falling-object-with-air-resistance/
@@ -314,8 +319,9 @@ export default {
     //Fbuoyancy = ρ*Volume*g
 
     const startSimulation = () => {
-      if(disableStart.value) return; // Prevent starting if already running
+      if(disableStart.value) return;
       disableStart.value = true 
+
       if (!pixiApp || !item) return;
 
       // Get the drag, buoyancy, mass, and bounce properties of the selected item
@@ -337,9 +343,9 @@ export default {
       let Weight =  mass * gravity; // Weight of the item in Newtons
 
 
-        //constants for x oscillations
-        let oscillationAngle = 180; // Angle for oscillation when falling
-        const oscillationAmplitude = .5; // amplitude for oscillation when falling
+      //constants for x oscillations
+      let oscillationAngle = 180; // Angle for oscillation when falling
+      const oscillationAmplitude = .5; // amplitude for oscillation when falling
 
       // Record initial data for time = 0
       data.value.push({
@@ -820,27 +826,6 @@ export default {
   width: 10px; 
   height: 2px; 
   background-color: #333; 
-}
-
-.details-card {
-  background-color: #fff;
-  padding: 10px;
-  border-radius: 5px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.detail-row {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-
-.detail-label {
-  font-weight: bold;
-}
-
-.detail-value {
-  text-align: right;
 }
 
 .stats-card {
