@@ -1,21 +1,39 @@
 <template>
-  <h1>Gravity Simulation</h1>
+  
   <div class="gravity-simulation">
+    <!-- Center Section: Simulation -->
+    <div class="center-panel">
+        <div class="simulation-container">
+          <!-- Height Scale -->
+          <div class="height-scale">
+            <div v-for="i in 10" :key="i" class="scale-mark">
+              {{ (100 - i * 10) }} m
+            </div>
+          </div>
+          <!-- Simulation Area -->
+          <div ref="simContainer" class="simulation-area">
+            <!-- PIXI.js simulation will render here -->
+            <div
+              v-if="cursorPosition"
+              class="cursor-height"
+              :style="{ left: `${cursorPosition.x}px`, top: `${cursorPosition.y}px` }"
+            >
+              {{ cursorHeight }} m
+            </div>
+          </div>
+        </div>
+    </div>
 
-    <!-- Left Section: Item Selection and Table -->
-    
-      <div class="left-panel">
-        <div class="top-row">
-        <div  class="left-column">
-          <!-- Control Buttons -->
-          <section class="controls">
-            <button @click="startSimulation">Start Simulation</button>
+    <!-- Right Section: Item Details -->
+    <div class="right-panel">
+      <section class="item-details">
+        <h2>Gravity Simulation</h2>
+        <section class="controls">
+            <button @click="startSimulation" :disabled="disableStart">Start Simulation</button>
             <button @click="resetSimulation">Reset Simulation</button>
-        
           </section>
-          <!-- Item Selection Section -->
-          <section class="item-selection">
-            <h2>Select Item</h2>
+        <section class="item-selection">
+            <h3>Select Item</h3>
             <div class="item-options">
               <label
                 v-for="item in items"
@@ -37,9 +55,28 @@
               </label>
             </div>
           </section>
-          <!-- Environment Selection Section -->
-          <section class="environment-selection">
-            <h2>Select Environment</h2>
+        <div class="stats-card">
+          <div class="stat-row">
+            <span class="stat-label">Mass:</span>
+            <span class="stat-value">{{ selectedItemData.mass }} kg</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Drag:</span>
+            <span class="stat-value">{{ selectedItemData.drag }}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Area:</span>
+            <span class="stat-value">{{ selectedItemData.area }} m²</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Volume:</span>
+            <span class="stat-value">{{ selectedItemData.volume }} m³</span>
+          </div>
+        </div>
+       
+            <!-- Environment Selection Section -->
+            <section class="environment-selection">
+            <h3>Select Environment</h3>
             <div class="environment-options">
               <label class="environment-option">
                 <input
@@ -59,24 +96,58 @@
               </label>
             </div>
           </section>
-        </div>
-        <div class="right-column">
-            <img class="forces-image" src="./assets/forces.png" alt="Forces acting on the object" />
-        </div>
-    </div>
+          <div class="stats-card">
+          <div class="stat-row">
+            <span class="stat-label">Gravity:</span>
+            <span class="stat-value">9.81 m/s</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Density:</span>
+            <span class="stat-value">{{selectedEnvironment == "air" ? "1.225 kg/m³": "0 kg/m³"}}</span>
+          </div>
+          </div>
+          <h3> Computed Properties</h3>
+          <div class="stats-card">
+          <div class="stat-row">
+            <span class="stat-label">Weight:</span>
+            <span class="stat-value">{{(selectedItemData.mass * 9.81).toFixed(3)}} kg</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Buoyancy Force:</span>
+            <span class="stat-value">{{(selectedEnvironment == "air" ? 1.225 * selectedItemData.volume * 9.81: 0).toFixed(3)}} N</span>
+          </div>
+          </div>
+      </section>
+    
 
+      <!-- Velocity vs Time Graph -->
+      <section class="graphs">
+        <h3>Graphs</h3>
+        
+        <div class="graph-container">
+          <canvas id="velocityGraph"></canvas>
+        <canvas id="velocityGraph"></canvas>
+      </div>
+        
+        <div class="graph-container">
+        <canvas id="dragGraph"></canvas>
+       </div>
+        
+       
+        <div class="graph-container">
+        <canvas id="positionGraph"></canvas>
+      </div>
+      </section>
       <!-- Table Section -->
       <section class="data-table">
-        <h2>Time, Velocity, and Position</h2>
+        <h3>Collected Data</h3>
         <table>
           <thead>
             <tr>
               <th>Time (s)</th>
               <th>Velocity (m/s)</th>
               <th>Position (m)</th>
-              <th>Fbuoy (N)</th>
               <th>Fdrag (N)</th>
-              <th>Weight (N)</th>
             </tr>
           </thead>
           <tbody>
@@ -84,50 +155,14 @@
               <td>{{ entry.time }}</td>
               <td>{{ entry.velocity }}</td>
               <td>{{ entry.position }}</td>
-              <td>{{ entry.Fbuoyancy }}</td>
               <td>{{ entry.Fdrag }}</td>
-              <td>{{ entry.Weight }}</td>
             </tr>
           </tbody>
         </table>
       </section>
     </div>
-
-    <!-- Right Section: Simulation -->
-    <div class="right-panel">
-      <section class="simulation">
-        <div ref="simContainer" class="simulation-area">
-          <!-- PIXI.js simulation will render here -->
-          <div
-            class="cursor-height"
-            :style="{ left: `${cursorPosition.x}px`, top: `${cursorPosition.y}px` }"
-          >
-            {{ cursorHeight }} m
-          </div>
-        </div>
-      </section>
-    </div>
   </div>
   <div>
-    <h3>Governing Equations:</h3>
-    <strong>1. Net Force:</strong> The net force acting on the object is calculated as:<br>
-    F = Weight - Fdrag - Fbuoyancy<br>
-    Where:<br>
-    Weight = m * g (force due to gravity)<br>
-    Fdrag = 0.5 * Cd * ρ * A * velocity² (drag force, dependent on velocity)<br>
-    Fbuoyancy = ρ * Volume * g (buoyancy force, upward force due to displaced air)<br>
-    <br>
-    <strong>2.Acceleration:</strong> Using Newton's second law:<br>
-    acceleration = F / m<br>
-    Substituting the net force:<br>
-    acceleration = g - (Fdrag / m) + (Fbuoyancy / m)<br>
-    <br>
-    <strong>3. Velocity Update:</strong> The velocity is updated using the kinematic equation:<br>
-    velocity = velocity(at time 0) + (acceleration * delta_time)<br>
-    This accounts for the cumulative effect of forces over time.<br>
-
-    <a href="https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/falling-object-with-air-resistance/">NASA article for reference</a><br>
-
     
   </div>
 </template>
@@ -135,6 +170,7 @@
 <script>
 import * as PIXI from "pixi.js";
 import { ref, computed, onMounted, onUnmounted, watch } from "vue";
+import Chart from "chart.js/auto";
 import ballImage from "./assets/ball.png";
 import balloonImage from "./assets/balloon.png";
 import featherImage from "./assets/feather.png";
@@ -142,6 +178,7 @@ import backgroundImage from "./assets/background.png";
 
 export default {
   setup() {
+    let disableStart = ref(false);
     const simContainer = ref(null);
     const cursorPosition = ref({ x: 0, y: 0 }); 
     const cursorHeight = ref(0);
@@ -178,6 +215,147 @@ export default {
         initialPosition: 350, 
         bounce: 0.1 }, 
     ]);
+
+    const selectedItemData = computed(() => {
+      return items.value.find((item) => item.id === selectedItem.value);
+    });
+
+
+    let velocityChart = null;
+    let dragChart = null;
+    let positionChart = null;
+
+const initializeGraphs = () => {
+  const ctx = document.getElementById("velocityGraph").getContext("2d");
+  velocityChart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: data.value.map((entry) => entry.time), // Time values
+      datasets: [
+        {
+          label: "Velocity (m/s)",
+          data: data.value.map((entry) => entry.velocity), // Velocity values
+          borderColor: "#4caf50",
+          fill: false,
+        },
+      ],
+    },
+    options: {
+        plugins: {
+          title: {
+                display: true,
+                text: 'Velocity vs Time',
+            },
+            legend: {
+                display: false, // This line removes the legend
+            }
+        },
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          title: {
+            display: true,
+            text: "Time (s)",
+          },
+        },
+        y: {
+          title: {
+            display: true,
+            text: "Velocity (m/s)",
+          },
+        },
+      },
+    },
+  });
+
+  const ctxDrag = document.getElementById("dragGraph").getContext("2d");
+  dragChart = new Chart(ctxDrag, {
+    type: "line",
+    data: {
+      labels: data.value.map((entry) => entry.time), // Time values
+      datasets: [
+        {
+          label: "Drag Force (N)",
+          data: data.value.map((entry) => entry.Fdrag), // Drag force values
+          borderColor: "#f44336",
+          fill: false,
+        },
+      ],
+    },
+    options: {
+      plugins: {
+          title: {
+                display: true,
+                text: 'Drag vs Time',
+            },
+            legend: {
+                display: false, // This line removes the legend
+            }
+        },
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          title: {
+            display: true,
+            text: "Time (s)",
+          },
+        },
+        y: {
+          title: {
+            display: true,
+            text: "Drag Force (N)",
+          },
+        },
+      },
+    },
+  });
+
+  const ctxPosition = document.getElementById("positionGraph").getContext("2d");
+  positionChart = new Chart(ctxPosition, {
+    type: "line",
+    data: {
+      labels: data.value.map((entry) => entry.time), // Time values
+      datasets: [
+        {
+          label: "Position (m)",
+          data: data.value.map((entry) => entry.position), // Position values
+          borderColor: "#2196f3",
+          backgroundColor: "rgba(33, 150, 243, 0.2)",
+          fill: false,
+        },
+      ],
+    },
+    options: {
+      plugins: {
+          title: {
+                display: true,
+                text: 'Position vs Time',
+            },
+            legend: {
+                display: false, // This line removes the legend
+            }
+        },
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          title: {
+            display: true,
+            text: "Time (s)",
+          },
+        },
+        y: {
+          title: {
+            display: true,
+            text: "Position (m)",
+          },
+        },
+      },
+    },
+  });
+};
 
     //This sim is based off the principles of falling objects outlined here in the NASA article:
     //https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/falling-object-with-air-resistance/
@@ -263,6 +441,8 @@ export default {
     };
 
     const startSimulation = () => {
+      if(disableStart.value) return; // Prevent starting if already running
+      disableStart.value = true 
       if (!pixiApp || !item) return;
 
       // Get the drag, buoyancy, mass, and bounce properties of the selected item
@@ -317,7 +497,6 @@ export default {
           Fdrag = 0.5 * Cdrag * 1.225 * area * velocity * velocity; // Fdrag = 1/2*Cd*ρ*A*v²
           const direction = velocity > 0 ? -1 : 1; // Determine direction of drag force
           velocity += direction * (Fdrag/mass) * deltaTime; 
-          console.log("drag:", velocity)
         }
 
         // Update the item's real-world position (in meters)
@@ -358,6 +537,22 @@ export default {
             Weight: Weight.toFixed(3), // Weight of the item
           });
           elapsedTime = 0; // Reset elapsed time
+        
+
+          // Update the chart data
+          velocityChart.data.labels = data.value.map((entry) => entry.time); // Add new x-axis label
+          velocityChart.data.datasets[0].data = data.value.map((entry) => entry.velocity); // Add new y-axis value
+          velocityChart.update();
+
+          // Update the drag force chart data
+          dragChart.data.labels = data.value.map((entry) => entry.time); // Add new x-axis label
+          dragChart.data.datasets[0].data = data.value.map((entry) => entry.Fdrag); // Add new y-axis value
+          dragChart.update();
+
+          // Update the position chart data
+          positionChart.data.labels = data.value.map((entry) => entry.time); // Add new x-axis label
+          positionChart.data.datasets[0].data = data.value.map((entry) => entry.position); // Add new y-axis value
+          positionChart.update();
         }
 
         // Stop the simulation when the item comes to rest
@@ -379,6 +574,7 @@ export default {
         initializeSimulation(item.image);
       // Clear the `data` array
       data.value = [];
+      disableStart.value = false; // Re-enable the start button
     };
 
     const destroySimulation = () => {
@@ -401,17 +597,31 @@ export default {
       },
     );
 
+
     const updateCursorHeight = (event) => {
       if (!simContainer.value) return;
+
       const rect = simContainer.value.getBoundingClientRect();
-      cursorPosition.value = {
-        x: event.clientX,
-        y: event.clientY - rect.top,
-      };
-      cursorHeight.value = ((canvasHeight - cursorPosition.value.y) / scalingFactor).toFixed(2);
+      const cursorX = event.clientX;
+      const cursorY = event.clientY;
+
+      // Check if the cursor is inside the simulation container
+      const isInside = cursorX >= rect.left && cursorX <= rect.right && cursorY >= rect.top && cursorY <= rect.bottom;
+
+      if (isInside) {
+        cursorPosition.value = {
+          x: cursorX - rect.left,
+          y: cursorY - rect.top,
+        };
+        cursorHeight.value = ((canvasHeight - cursorPosition.value.y) / scalingFactor).toFixed(2);
+      } else {
+        cursorPosition.value = null; // Hide the cursor text
+        cursorHeight.value = null; // Reset the height value
+      }
     };
 
     onMounted(() => {
+      initializeGraphs();
       const defaultItem = items.value.find((item) => item.id === selectedItem.value);
       if (defaultItem) {
         initializeSimulation(defaultItem.image); 
@@ -423,6 +633,9 @@ export default {
 
     onUnmounted(() => {
       destroySimulation();
+      if (velocityChart) {
+        velocityChart.destroy();
+      }
       if (simContainer.value) {
         simContainer.value.removeEventListener("mousemove", updateCursorHeight);
       }
@@ -434,11 +647,13 @@ export default {
       selectedEnvironment, 
       items,
       data,
-      selectedItemName, 
+      selectedItemName,
+      selectedItemData, 
       startSimulation,
       resetSimulation,
       cursorPosition,
       cursorHeight,
+      disableStart
 
     };
   },
@@ -452,41 +667,49 @@ export default {
   padding: 20px;
 }
 
-.left-panel {
-  flex: 1;
-  margin-right: 20px;
+.center-panel {
+  width: 400px; /* Match the simulation canvas width */
+  height: 700px; /* Match the simulation canvas height */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.simulation-area {
+  border: 1px solid #ccc;
+  width: 100%; /* Ensure the simulation canvas fits the center panel */
+  height: 100%; /* Ensure the simulation canvas fits the center panel */
 }
 
 .right-panel {
-  flex: 2;
+  flex: 1; /* Ensure the item details section takes up equal space as the left panel */
+  margin-top: 0; /* Remove the top margin to align it properly */
+  padding: 10px;
+  border: 1px solid #ccc;
+  background-color: #f9f9f9;
+  font-size: 14px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-evenly;
 }
 
-.forces-image {
-  width: 150px; 
-  height: auto;
+.item-details h2 {
   margin-bottom: 10px;
 }
+
+.item-details p {
+  margin: 5px 0;
+}
+
 .item-selection,
 .environment-selection,
 .data-table,
 .controls {
   margin-bottom: 20px;
 }
-.top-row{
-  display: flex;
-  justify-content: space-between;
-}
-.left-column {
-  flex-grow: 2;
-}
-.right-column {
-  flex-grow: 0;
-  max-width: 120px; /* Set a maximum width for the column */
-  display: flex;
-  justify-content: center;
-  align-items: center;
 
-}
+
 .item-options {
   display: flex;
   flex-wrap: wrap;
@@ -499,8 +722,9 @@ export default {
 }
 
 .item-option img {
-  width: 50px; 
-  height: 50px;
+  width: 40px; 
+  height: 40px;
+  object-fit: contain;;
   border: 2px solid transparent;
   border-radius: 5px;
   transition: border-color 0.3s;
@@ -523,20 +747,6 @@ export default {
   cursor: pointer;
 }
 
-.simulation-area {
-  border: 1px solid #ccc;
-  width: 400px; 
-  height: 700px;
-}
-
-.data-table {
-  height: 380px; 
-  overflow-y: auto; 
-  border: 1px solid #ccc;
-  padding: 10px;
-  background-color: #f9f9f9;
-}
-
 .cursor-height {
   position: absolute;
   background-color: rgba(0, 0, 0, 0.7);
@@ -544,5 +754,118 @@ export default {
   padding: 5px;
   border-radius: 5px;
   font-size: 12px;
+}
+
+.simulation-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.height-scale {
+  position: absolute;
+  left: 15px;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  color: #333;
+}
+
+.scale-mark {
+  height: 10%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  position: relative;
+}
+
+.scale-mark::after {
+  content: "";
+  position: absolute;
+  left: -15px; 
+  width: 10px; 
+  height: 2px; 
+  background-color: #333; 
+}
+
+.details-card {
+  background-color: #fff;
+  padding: 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.detail-label {
+  font-weight: bold;
+}
+
+.detail-value {
+  text-align: right;
+}
+
+/* New styles for the stats card */
+.stats-card {
+  background-color: #fff;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.stat-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.stat-label {
+  font-weight: bold;
+  margin-right: 5px;
+}
+
+.stat-value {
+  color: #333;
+}
+
+.graph-container {
+  position: relative;
+  width: 300px;
+  height: 200px; /* Set a fixed height for the graph container */
+}
+
+.controls button {
+  background-color: darkblue; /* Blue background */
+  color: white; /* White text */
+  border: none; /* Remove border */
+  border-radius: 4px; /* Slightly rounded corners */
+  padding: 8px 16px; /* Smaller padding */
+  font-size: 14px; /* Slightly smaller font size */
+  cursor: pointer; /* Change cursor to pointer */
+  transition: background-color 0.2s; /* Smooth transition for background color */
+  margin-right: 10px; /* Add space between buttons */
+}
+
+
+.controls button:last-child {
+  margin-right: 0; /* Remove margin for the last button */
+}
+
+.controls button:not(:disabled):hover {
+  background-color: #0056b3; /* Darker blue on hover */
+}
+
+.controls button:not(:disabled):active {
+  background-color: #003f7f; /* Even darker blue on click */
+}
+button:disabled {
+  background-color: #ccc; /* Gray background for disabled state */
+  cursor: not-allowed; /* Change cursor to indicate disabled state */
 }
 </style>
