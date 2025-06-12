@@ -112,7 +112,7 @@
         <div class="stats-card">
           <div class="stat-row">
             <span class="stat-label">Weight:</span>
-            <span class="stat-value">{{(selectedItemData.mass * 9.81).toFixed(3)}} kg</span>
+            <span class="stat-value">{{(selectedItemData.mass * 9.81).toFixed(3)}} N</span>
           </div>
           <div class="stat-row">
             <span class="stat-label">Buoyancy Force:</span>
