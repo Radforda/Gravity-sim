@@ -507,7 +507,7 @@ export default {
 
       if (isInside) {
         cursorPosition.value = {
-          x: cursorX - rect.left,
+          x: cursorX - rect.left+ 15,
           y: cursorY - rect.top,
         };
         cursorHeight.value = ((canvasHeight - cursorPosition.value.y) / scalingFactor).toFixed(2);
